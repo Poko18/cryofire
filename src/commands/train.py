@@ -24,6 +24,31 @@ from src.losses import symmetric_loss, kl_divergence_conf
 from src.models import CryoFIRE
 from src.lie_tools import select_predicted_latent
 from src.mask import CircularMask, FrequencyMarchingMask
+import subprocess
+
+# Functions to find free GPU
+def run_cmd(cmd):
+    out = (subprocess.check_output(cmd, shell=True)).decode('utf-8')[:-1]
+    return out
+
+def get_free_gpu_indices():
+    out = run_cmd('nvidia-smi -q -d Memory | grep -A4 -e "GPU"')
+    out = (out.split('\n'))[1:]
+    out = [l for l in out if '--' not in l]
+
+    total_gpu_num = int(len(out)/5)
+    gpu_bus_ids = []
+    for i in range(total_gpu_num):
+        gpu_bus_ids.append([l.strip().split()[1] for l in out[i*5:i*5+1]][0])
+
+    out = run_cmd('nvidia-smi --query-compute-apps=gpu_bus_id --format=csv')
+    gpu_bus_ids_in_use = (out.split('\n'))[1:]
+    gpu_ids_in_use = []
+
+    for bus_id in gpu_bus_ids_in_use:
+        gpu_ids_in_use.append(gpu_bus_ids.index(bus_id))
+
+    return [i for i in range(total_gpu_num) if i not in gpu_ids_in_use]
 
 log = utils.log
 vlog = utils.vlog
@@ -57,8 +82,18 @@ class Trainer:
         torch.manual_seed(args.seed)
 
         # set the device
+
+        def get_free_gpu():
+            free_gpus = get_free_gpu_indices()
+            if free_gpus:
+                print(f"Using GPU - {free_gpus[0]}")
+                return torch.device(f"cuda:{free_gpus[0]}")
+            else:
+                return torch.device("cpu")
+
         self.use_cuda = torch.cuda.is_available()
-        self.device = torch.device('cuda' if self.use_cuda else 'cpu')
+        #self.device = torch.device('cuda:2' if self.use_cuda else 'cpu')
+        self.device = get_free_gpu() if self.use_cuda else torch.device("cpu")
         log('Use cuda {}'.format(self.use_cuda))
 
         # tensorboard writer

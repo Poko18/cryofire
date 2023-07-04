@@ -105,3 +105,4 @@ ENV/
 examples/
 configs/
 logs/
+storage.code-workspace
