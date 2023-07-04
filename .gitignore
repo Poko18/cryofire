@@ -105,3 +105,4 @@ ENV/
 examples/
 configs/
 logs/
+cc-tadej-key.pem
