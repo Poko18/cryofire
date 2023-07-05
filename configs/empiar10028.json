@@ -9,7 +9,7 @@
     "test_pose": null,
     "test_colors": null,
     "norm": null,
-    "load": null,
+    "load": "/media/longstorage/Tadej/cryofire/logs/empiar10028/weights.55.pkl",
     "log_interval": 50000,
     "log_heavy_interval": 5,
     "seed": -1,
