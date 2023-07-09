@@ -106,3 +106,4 @@ examples/
 configs/
 logs/
 cc-tadej-key.pem
+scripts/*.out
